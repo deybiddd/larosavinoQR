@@ -6,7 +6,7 @@ export async function middleware(req: NextRequest) {
   const isProtected = protectedPaths.some((p) => url.pathname === p || url.pathname.startsWith(p + "/"));
   if (!isProtected) return NextResponse.next();
 
-  // Supabase sets auth cookies starting with `sb:`; simple presence check
+  // Lightweight check; client layouts will do a definitive check
   const hasSupabaseAuth = Array.from(req.cookies.getAll()).some((c) => c.name.startsWith("sb:"));
   if (!hasSupabaseAuth) {
     const loginUrl = new URL("/login", req.url);
