@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient, type SupabaseClient } from "@supabase/ssr";
 
 let browserClient: SupabaseClient | null = null;
 
@@ -13,7 +13,8 @@ export const getSupabaseBrowserClient = (): SupabaseClient => {
     // Avoid constructing an invalid client during SSR/prerender
     throw new Error("Supabase browser client is not configured");
   }
-  browserClient = createClient(supabaseUrl, supabaseAnonKey);
+  // Use SSR browser client so auth tokens are stored in cookies (sb:*)
+  browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
   return browserClient;
 };
 
