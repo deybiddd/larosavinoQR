@@ -34,7 +34,10 @@ function LoginInner() {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 toast.success("Welcome back");
-                router.replace(redirectTo);
+                // Force a full reload so middleware sees the new auth cookies in production
+                setTimeout(() => {
+                  window.location.assign(redirectTo);
+                }, 50);
               } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : "Login failed";
                 toast.error(message);
