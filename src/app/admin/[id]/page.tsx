@@ -117,6 +117,10 @@ export default function EventDetailPage() {
                     ) : null}
                   </ul>
                 </div>
+                <div className="md:col-span-2 rounded-md border border-border p-3">
+                  <p className="font-medium">Recent scans</p>
+                  <ScanLog eventId={event.id} />
+                </div>
               </div>
             </div>
           ) : (
@@ -125,6 +129,37 @@ export default function EventDetailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function ScanLog({ eventId }: { eventId: string }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch(`/api/events/${eventId}/logs`, { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          setLogs(json.logs || []);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    run();
+  }, [eventId]);
+  if (!logs.length) return <p className="text-sm text-muted-foreground">No scans yet.</p>;
+  return (
+    <ul className="divide-y divide-border max-h-[300px] overflow-auto pr-1 text-sm">
+      {logs.map((l) => (
+        <li key={l.id} className="py-2 flex items-center justify-between">
+          <span>
+            {l.tickets?.attendee_name || "Unknown"} — {l.result}
+          </span>
+          <span className="text-muted-foreground">{new Date(l.scanned_at).toLocaleString()}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
