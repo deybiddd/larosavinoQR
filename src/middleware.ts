@@ -1,23 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const url = new URL(req.url);
-  const protectedPaths = ["/admin", "/scanner", "/api/events", "/api/tickets", "/api/verify"];
-  const isProtected = protectedPaths.some((p) => url.pathname === p || url.pathname.startsWith(p + "/"));
-  if (!isProtected) return NextResponse.next();
-
-  // Lightweight check; client layouts will do a definitive check
-  const hasSupabaseAuth = Array.from(req.cookies.getAll()).some((c) => c.name.startsWith("sb:"));
-  if (!hasSupabaseAuth) {
-    const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("redirect", url.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+export async function middleware(_req: NextRequest) {
+  // Avoid page redirect loops. Auth is enforced in client layouts.
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/scanner", "/api/:path*"],
+  // Keep middleware enabled (no-op) only to allow future tweaks.
+  matcher: ["/api/:path*", "/admin/:path*", "/scanner"],
 };
 
 
