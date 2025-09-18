@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,22 @@ function LoginInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // If already logged in on prod, bounce directly to target
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          window.location.replace(redirectTo);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    run();
+  }, [redirectTo]);
 
   return (
     <div className="min-h-dvh flex items-center justify-center px-6 py-20">
