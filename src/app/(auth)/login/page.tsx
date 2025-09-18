@@ -15,16 +15,15 @@ function LoginInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
-  // If already logged in on prod, bounce directly to target
+  // If already logged in, show a continue button instead of auto-redirect to avoid loops
   useEffect(() => {
     const run = async () => {
       try {
         const supabase = getSupabaseBrowserClient();
         const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          window.location.replace(redirectTo);
-        }
+        setHasSession(!!data.session);
       } catch {
         // ignore
       }
@@ -73,6 +72,16 @@ function LoginInner() {
             <Button type="submit" className="w-full bg-brand text-brand-foreground hover:opacity-95" disabled={loading}>
               {loading ? "Signing in…" : "Sign in"}
             </Button>
+            {hasSession ? (
+              <Button
+                type="button"
+                onClick={() => window.location.assign(redirectTo)}
+                className="w-full mt-2 border border-border"
+                aria-label="Continue to dashboard"
+              >
+                Continue to dashboard
+              </Button>
+            ) : null}
           </form>
         </CardContent>
       </Card>
