@@ -33,6 +33,7 @@ export default function TicketsAdminPage() {
   const [selectedEvent, setSelectedEvent] = useState<string>("");
   const [form, setForm] = useState({ attendee_name: "", attendee_email: "" });
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "issued" | "checked_in" | "revoked">("all");
   const { data: tickets } = useQuery({ queryKey: ["tickets", selectedEvent], queryFn: () => fetchTickets(selectedEvent), enabled: !!selectedEvent });
 
   const issueTicket = useMutation({
@@ -88,6 +89,13 @@ export default function TicketsAdminPage() {
   useEffect(() => {
     if (events && events.length > 0 && !selectedEvent) setSelectedEvent(events[0].id);
   }, [events, selectedEvent]);
+
+  // Preselect event via query param
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const e = url.searchParams.get("event");
+    if (e) setSelectedEvent(e);
+  }, []);
 
   // QR currently encodes the secret directly. Switch to URL if needed later.
 
@@ -167,8 +175,20 @@ export default function TicketsAdminPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <Input placeholder="Search by attendee name/email…" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <div className="flex items-center gap-2">
+              {(["all", "issued", "checked_in", "revoked"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatusFilter(s)}
+                  className={`text-xs rounded-md px-3 py-1 border ${statusFilter === s ? "bg-accent text-accent-foreground" : "border-border"}`}
+                >
+                  {s.replace("_", " ")}
+                </button>
+              ))}
+            </div>
           </div>
           {!tickets || tickets.length === 0 ? (
             <p className="text-muted-foreground">No tickets yet.</p>
@@ -178,6 +198,7 @@ export default function TicketsAdminPage() {
                 .filter((t) =>
                   !query ? true : `${t.attendee_name} ${t.attendee_email || ""}`.toLowerCase().includes(query.toLowerCase())
                 )
+                .filter((t) => (statusFilter === "all" ? true : t.status === statusFilter))
                 .map((t) => (
                   <li key={t.id} className="rounded-md border border-border p-4">
                     <p className="font-medium">{t.attendee_name}</p>
@@ -186,6 +207,15 @@ export default function TicketsAdminPage() {
                       <QRCodeCanvas value={t.qr_secret} size={160} includeMargin />
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground break-all">{t.qr_secret}</p>
+                    <div className="mt-1">
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(t.qr_secret)}
+                        className="text-xs underline underline-offset-4"
+                      >
+                        Copy code
+                      </button>
+                    </div>
                     <div className="mt-3 flex items-center gap-2">
                       {t.status !== "revoked" ? (
                         <button

@@ -21,6 +21,8 @@ type Event = {
   created_at: string;
 };
 
+type EventStats = { total: number; issued: number; checked_in: number; revoked: number };
+
 const EventFormSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
@@ -157,7 +159,7 @@ export default function AdminPage() {
           ) : events && events.length > 0 ? (
             <ul className="divide-y divide-border">
               {events.map((ev) => (
-                <li key={ev.id} className="py-4 flex items-center justify-between">
+                <li key={ev.id} className="py-4 grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                   <div>
                     <Link href={`/admin/${ev.id}`} className="font-medium hover:underline">
                       {ev.name}
@@ -167,10 +169,21 @@ export default function AdminPage() {
                       {ev.venue ? ` • ${ev.venue}` : ""}
                     </p>
                   </div>
-                  <div>
-                    <Link href={`/admin/${ev.id}`} className="text-sm hover:underline">
-                      View
+                  <EventStatsRow id={ev.id} />
+                  <div className="flex items-center gap-3">
+                    <Link href={`/admin/${ev.id}`} className="text-sm underline underline-offset-4">
+                      Attendees
                     </Link>
+                    <Link href={`/admin/tickets?event=${ev.id}`} className="text-sm underline underline-offset-4">
+                      Tickets
+                    </Link>
+                    <button
+                      type="button"
+                      className="text-sm underline underline-offset-4"
+                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/e/${ev.id}`)}
+                    >
+                      Copy signup link
+                    </button>
                   </div>
                 </li>
               ))}
@@ -180,6 +193,32 @@ export default function AdminPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function EventStatsRow({ id }: { id: string }) {
+  const [stats, setStats] = useState<EventStats | null>(null);
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch(`/api/events/${id}/stats`, { cache: "no-store" });
+        if (res.ok) setStats(await res.json());
+      } catch {
+        // ignore
+      }
+    };
+    run();
+  }, [id]);
+  return (
+    <div className="text-sm text-muted-foreground">
+      {stats ? (
+        <span>
+          {stats.checked_in}/{stats.total} checked-in
+        </span>
+      ) : (
+        <span>Loading…</span>
+      )}
     </div>
   );
 }
