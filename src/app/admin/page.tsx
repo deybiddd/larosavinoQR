@@ -115,10 +115,23 @@ export default function AdminPage() {
               <Label htmlFor="venue">Venue</Label>
               <Input id="venue" value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} />
             </div>
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 flex items-center gap-3">
               <Button type="submit" className="bg-brand text-brand-foreground hover:opacity-95" disabled={createEvent.isPending}>
                 {createEvent.isPending ? "Creating…" : "Create event"}
               </Button>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!events?.length) return;
+                  const id = events[0]?.id;
+                  if (id) window.open(`/e/${id}`, "_blank");
+                }}
+                className="text-sm underline underline-offset-4"
+                aria-label="Open latest event public page"
+              >
+                Open latest event public page
+              </a>
             </div>
           </form>
         </CardContent>
