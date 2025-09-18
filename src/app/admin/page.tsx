@@ -38,7 +38,7 @@ const fetchEvents = async (): Promise<Event[]> => {
 
 export default function AdminPage() {
   const qc = useQueryClient();
-  const { data: events, isLoading } = useQuery({ queryKey: ["events"], queryFn: fetchEvents });
+  const { data: events, isLoading, isError } = useQuery({ queryKey: ["events"], queryFn: fetchEvents });
   const [form, setForm] = useState({ name: "", description: "", starts_at: "", ends_at: "", venue: "" });
 
   const createEvent = useMutation({
@@ -129,7 +129,17 @@ export default function AdminPage() {
           <CardTitle>Events</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isError ? (
+            <div className="space-y-2">
+              <p className="text-red-600">Cannot load events. Your session may have expired.</p>
+              <Button
+                type="button"
+                onClick={() => window.location.assign(`/login?redirect=${encodeURIComponent("/admin")}`)}
+              >
+                Sign in again
+              </Button>
+            </div>
+          ) : isLoading ? (
             <p className="text-muted-foreground">Loading events…</p>
           ) : events && events.length > 0 ? (
             <ul className="divide-y divide-border">
