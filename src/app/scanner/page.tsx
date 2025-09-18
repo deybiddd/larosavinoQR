@@ -12,6 +12,8 @@ export default function ScannerPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [scanning, setScanning] = useState(true);
   const [lastSecret, setLastSecret] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<MediaTrackConstraints["facingMode"]>("environment");
+  const [manualSecret, setManualSecret] = useState("");
 
   const scanFrame = useCallback(async () => {
     if (!webcamRef.current || !canvasRef.current) return;
@@ -68,12 +70,57 @@ export default function ScannerPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFacingMode((m) => (m === "environment" ? "user" : "environment"))}
+              className="text-xs rounded-md px-3 py-1 border border-border hover:bg-accent hover:text-accent-foreground"
+              aria-label="Switch camera"
+            >
+              Switch camera
+            </button>
+            <label className="text-xs rounded-md px-3 py-1 border border-border cursor-pointer hover:bg-accent hover:text-accent-foreground">
+              Upload image
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const img = new Image();
+                  img.onload = async () => {
+                    const canvas = canvasRef.current;
+                    if (!canvas) return;
+                    const ctx = canvas.getContext("2d");
+                    if (!ctx) return;
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const jsQR = (await import("jsqr")).default;
+                    const code = jsQR(data.data, data.width, data.height);
+                    if (code?.data) {
+                      const secret = code.data;
+                      const res = await fetch("/api/verify", { method: "POST", body: JSON.stringify({ secret }) });
+                      const json = await res.json();
+                      if (json.valid) toast.success("Checked in ✅");
+                      else toast.error(json.reason || "Invalid");
+                    } else {
+                      toast.error("No QR found in image");
+                    }
+                  };
+                  img.src = URL.createObjectURL(file);
+                }}
+              />
+            </label>
+          </div>
           <div className="aspect-video w-full overflow-hidden rounded-md bg-black">
             <Webcam
               ref={webcamRef}
               audio={false}
               screenshotFormat="image/png"
-              videoConstraints={{ facingMode: "environment" }}
+              videoConstraints={{ facingMode }}
               className="h-full w-full object-cover"
             />
           </div>
@@ -81,6 +128,28 @@ export default function ScannerPage() {
           <p className="text-sm text-muted-foreground">
             Point the camera at the attendee’s QR code. Results will appear as toast alerts.
           </p>
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              value={manualSecret}
+              onChange={(e) => setManualSecret(e.target.value)}
+              placeholder="Or paste code manually…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              aria-label="Manual code"
+            />
+            <button
+              type="button"
+              onClick={async () => {
+                if (!manualSecret.trim()) return;
+                const res = await fetch("/api/verify", { method: "POST", body: JSON.stringify({ secret: manualSecret.trim() }) });
+                const json = await res.json();
+                if (json.valid) toast.success("Checked in ✅");
+                else toast.error(json.reason || "Invalid");
+              }}
+              className="text-xs rounded-md px-3 py-2 border border-border hover:bg-accent hover:text-accent-foreground"
+            >
+              Verify
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>
