@@ -68,8 +68,9 @@ export default function PublicEventPage() {
                         const json = await res.json();
                         if (!res.ok) throw new Error(json.error || "Upload failed");
                         toast.success("Photo uploaded");
-                      } catch (err: any) {
-                        toast.error(err.message || "Upload failed");
+                      } catch (err: unknown) {
+                        const msg = err instanceof Error ? err.message : "Upload failed";
+                        toast.error(msg);
                       } finally {
                         setUploading(false);
                       }
@@ -94,8 +95,9 @@ export default function PublicEventPage() {
                   setTicketSecret(json.ticket.qr_secret);
                   setTicketId(json.ticket.id);
                   toast.success("Registered! Your ticket is ready.");
-                } catch (err: any) {
-                  toast.error(err.message || "Could not register");
+                } catch (err: unknown) {
+                  const msg = err instanceof Error ? err.message : "Could not register";
+                  toast.error(msg);
                 }
               }}
             >

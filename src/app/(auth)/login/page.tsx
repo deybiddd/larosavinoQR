@@ -53,7 +53,7 @@ function LoginInner() {
                 setTimeout(() => {
                   window.location.assign(redirectTo);
                 }, 50);
-              } catch (err: unknown) {
+                } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : "Login failed";
                 toast.error(message);
               } finally {

@@ -132,8 +132,10 @@ export default function EventDetailPage() {
   );
 }
 
+type ScanLogRow = { id: string; scanned_at: string; result: string; tickets?: { attendee_name?: string | null } };
+
 function ScanLog({ eventId }: { eventId: string }) {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<ScanLogRow[]>([]);
   useEffect(() => {
     const run = async () => {
       try {

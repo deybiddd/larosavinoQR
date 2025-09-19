@@ -21,8 +21,9 @@ export async function GET(_req: Request, context: unknown) {
       countFor("revoked"),
     ]);
     return NextResponse.json({ total, issued, checked_in, revoked }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || "stats_failed" }, { status: 500 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "stats_failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
