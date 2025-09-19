@@ -33,6 +33,12 @@ create table if not exists public.scan_logs (
 );
 
 -- Storage bucket (create manually in Supabase UI if not existing): attendee-uploads
+-- For instances without storage.create_bucket function, use this idempotent insert
+insert into storage.buckets (id, name, public)
+select 'attendee-uploads', 'attendee-uploads', true
+where not exists (
+  select 1 from storage.buckets where id = 'attendee-uploads'
+);
 
 -- Basic RLS policies (adjust per your org)
 alter table public.events enable row level security;

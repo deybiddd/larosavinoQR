@@ -141,7 +141,13 @@ export default function AdminPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Events</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Events</span>
+            <div className="flex items-center gap-3 text-sm">
+              <Link href="/admin/tickets" className="underline underline-offset-4">Tickets</Link>
+              <Link href="/scanner" className="underline underline-offset-4">Scanner</Link>
+            </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isError ? (
