@@ -17,6 +17,8 @@ export default function PublicEventPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [ticketSecret, setTicketSecret] = useState<string | null>(null);
+  const [ticketId, setTicketId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const run = async () => {
@@ -49,6 +51,33 @@ export default function PublicEventPage() {
                 <QRCodeCanvas value={ticketSecret} size={200} includeMargin />
               </div>
               <p className="mt-2 text-xs text-muted-foreground break-all">{ticketSecret}</p>
+              {ticketId ? (
+                <div className="pt-4">
+                  <p className="text-sm mb-2">Optionally upload your photo (for attendee list):</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !ticketId) return;
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      setUploading(true);
+                      try {
+                        const res = await fetch(`/api/public/tickets/${ticketId}/photo`, { method: "POST", body: fd });
+                        const json = await res.json();
+                        if (!res.ok) throw new Error(json.error || "Upload failed");
+                        toast.success("Photo uploaded");
+                      } catch (err: any) {
+                        toast.error(err.message || "Upload failed");
+                      } finally {
+                        setUploading(false);
+                      }
+                    }}
+                    disabled={uploading}
+                  />
+                </div>
+              ) : null}
             </div>
           ) : (
             <form
@@ -58,11 +87,12 @@ export default function PublicEventPage() {
                 try {
                   const res = await fetch(`/api/public/tickets`, {
                     method: "POST",
-                    body: JSON.stringify({ event_id: event.id, attendee_name: name, attendee_email: email || undefined }),
+                    body: JSON.stringify({ event_id: event!.id, attendee_name: name, attendee_email: email || undefined }),
                   });
                   const json = await res.json();
                   if (!res.ok) throw new Error(json.error?.message || "Could not register");
                   setTicketSecret(json.ticket.qr_secret);
+                  setTicketId(json.ticket.id);
                   toast.success("Registered! Your ticket is ready.");
                 } catch (err: any) {
                   toast.error(err.message || "Could not register");

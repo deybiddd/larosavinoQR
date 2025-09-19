@@ -17,7 +17,8 @@ create table if not exists public.tickets (
   status text not null default 'issued' check (status in ('issued','checked_in','revoked')),
   qr_secret text not null unique,
   created_at timestamptz not null default now(),
-  checked_in_at timestamptz
+  checked_in_at timestamptz,
+  photo_url text
 );
 
 create index if not exists tickets_event_idx on public.tickets(event_id);
@@ -30,6 +31,8 @@ create table if not exists public.scan_logs (
   scanner_id text,
   result text not null check (result in ('success','duplicate','revoked','invalid'))
 );
+
+-- Storage bucket (create manually in Supabase UI if not existing): attendee-uploads
 
 -- Basic RLS policies (adjust per your org)
 alter table public.events enable row level security;
