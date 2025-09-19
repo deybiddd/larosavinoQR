@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast, Toaster } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function LoginInner() {
-  const router = useRouter();
   const search = useSearchParams();
   const redirectTo = search.get("redirect") || "/admin";
   const [email, setEmail] = useState("");

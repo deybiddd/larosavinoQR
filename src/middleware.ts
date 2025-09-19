@@ -1,6 +1,6 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function middleware(_req: NextRequest) {
+export async function middleware() {
   // Avoid page redirect loops. Auth is enforced in client layouts.
   return NextResponse.next();
 }
